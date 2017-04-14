@@ -1,52 +1,38 @@
 # -*- coding: utf-8 -*-
 u'''
-@summary: http://www.wordcount.org/main.php
+@summary: 英文单词词频前 200000
 @author: cshanxiao
 @date: 2017-04-13
 '''
 
 import requests
-import string
 import threading
 import time
 import traceback
 import urlparse
-import urllib
-url_tpl = "http://www.wordcount.org/dbquery.php?toFind={}&method=SEARCH_BY_INDEX"
-lock = threading.Lock()
 
-class WordsClass(object):
+class Words(object):
 
     def __init__(self):
-        '''
-        Constructor
-        '''
-
-def check_domian(url):
-    try:
-        resp = requests.get(url, timeout=10)
-        if resp.status_code == 200:
-            print urlparse.parse_qs(resp.content)
-    except:
-        traceback.print_exc()
-
+        self.words = []
+        words = set()
+        with open("./words_20k.txt") as fd:
+            for line in fd.readlines():
+                line = line.strip().lower()
+                if not line or line.startswith("#") or line in words:
+                    continue
+                self.words.append(line)
+                words.add(line)
+        
+    def get_words(self, start=0, end=100, length_lt=3):
+        words = [item for item in self.words[start: end] if len(item) < length_lt]
+        return words
+    
+def test():
+    words = Words()
+    wanted_words = words.get_words(end=2000000, length_lt=4)
+    print len(wanted_words), ",".join(wanted_words)
+    
 if __name__ == '__main__':
-
-    threads = []
-    for i in xrange(90000):
-        url = url_tpl.format(i)
-        t1 = threading.Thread(target=check_domian, args=(url,))
-        threads.append(t1)
-
-        if len(threads) > 8:
-            for t in threads:
-                t.setDaemon(True)
-                time.sleep(1)
-                t.start()
-
-            for t in threads:
-                t.join()
-
-            threads = []
-            time.sleep(2)
+    test()
 
